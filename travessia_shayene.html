@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Plano de Preparação Física Shayene Metri </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Oásis Sereno -->
+    <!-- Application Structure Plan: A SPA foi desenhada com uma navegação principal por abas (Visão Geral, Plano de Treino, Nutrição & Dicas) para segmentar a informação de forma lógica e evitar sobrecarga de conteúdo. Esta estrutura permite que o usuário foque em uma área da preparação por vez (ex: consultar o treino do dia ou as regras de hidratação) sem precisar rolar por um documento longo. A interatividade principal se concentra na seção de treino, onde o usuário pode alternar entre as semanas e, agora, clicar em cada dia para ver detalhes do treino, recebendo feedback visual imediato. Essa abordagem orientada a tarefas é mais intuitiva e funcional para o plano de preparação. -->
+    <!-- Visualization & Content Choices: 1. Itinerário da Travessia (Visão Geral): Info: Distâncias diárias. Goal: Informar. Viz: Cards com ícones (Unicode) e texto. Justification: Mais visual e atrativo que uma lista simples. 2. Estratégia de Volume (Plano de Treino): Info: Estratégia de carga crescente e decrescente. Goal: Mostrar mudança. Viz: Gráfico de barras (Chart.js/Canvas). Justification: Um gráfico comunica a ideia de "Construção, Pico e Redução" de forma muito mais eficaz e imediata que parágrafos de texto. 3. Plano Semanal (Plano de Treino): Info: Exercícios diários. Goal: Organizar. Viz: Layout de grid com cards detalhados. Interaction: Botões para alternar a exibição das semanas via JS e cliques nos cards de dia para exibir detalhes do treino em formato de tabela. Justification: Permite ao usuário focar apenas na semana relevante e aprofundar no dia específico, tornando a interface mais limpa e organizada. 4. Dicas de Nutrição (Nutrição & Dicas): Info: Listas de alimentos e regras. Goal: Informar/Organizar. Viz: Cards e listas com ícones (Unicode). Justification: Agrupa visualmente informações relacionadas, melhorando a legibilidade. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F5F2; /* Tom de areia claro */
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+            color: #6B7280;
+        }
+        .nav-button.active {
+            color: #1E3A8A; /* Azul escuro */
+            border-bottom-color: #1E3A8A;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .week-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .week-button.active {
+            background-color: #1E3A8A;
+            color: white;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 40vh;
+        }
+        .workout-day-card {
+            cursor: pointer;
+        }
+        .workout-details-table th, .workout-details-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #E5E7EB;
+            text-align: left;
+            /* white-space: nowrap; */ /* Removed for better text wrapping in cells */
+        }
+        .workout-details-table th {
+            background-color: #F3F4F6;
+            font-weight: 600;
+            color: #374151;
+        }
+        .workout-details-table tr:last-child td {
+            border-bottom: none;
+        }
+        .border-top-combinado {
+            border-top: 2px solid #93C5FD; /* Um azul mais claro para a borda */
+        }
+        .border-top-option {
+            border-top: 2px dashed #BEE3F8; /* Borda tracejada para opções */
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Plano de Preparação Física </h1>
+ 	    <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Shayene Metri </h1>
+            <p class="text-lg text-blue-800 font-semibold">Travessia Lençóis Maranhenses 🏜️</p>
+        </header>
+
+        <nav class="mb-8 border-b-2 border-gray-200">
+            <ul class="flex justify-center flex-wrap -mb-px">
+                <li class="mr-2">
+                    <button class="nav-button inline-block p-4 border-b-2 border-transparent rounded-t-lg text-lg font-semibold active" data-tab="overview">Visão Geral</button>
+                </li>
+                <li class="mr-2">
+                    <button class="nav-button inline-block p-4 border-b-2 border-transparent rounded-t-lg text-lg font-semibold" data-tab="training">Plano de Treino</button>
+                </li>
+                <li>
+                    <button class="nav-button inline-block p-4 border-b-2 border-transparent rounded-t-lg text-lg font-semibold" data-tab="nutrition">Nutrição & Dicas</button>
+                </li>
+            </ul>
+        </nav>
+
+        <main>
+            <!-- Visão Geral -->
+            <section id="overview" class="content-section active">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2 text-gray-900">Sua Jornada Começa em 3 Semanas!</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">Esta é a visão geral da sua aventura. A preparação ao longo das próximas semanas será fundamental para você aproveitar ao máximo cada momento da travessia com segurança e performance.</p>
+                    <div class="mt-6 p-4 bg-blue-100 rounded-lg shadow-md inline-block">
+                        <p class="text-lg font-semibold text-blue-800 mb-2">Faltam para a Viagem:</p>
+                        <div id="countdown" class="text-2xl md:text-3xl font-bold text-blue-900"></div>
+                    </div>
+                </div>
+
+                <div class="card p-6 mb-8">
+                    <h3 class="text-xl font-bold text-center mb-4 text-blue-900">Itinerário da Travessia</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-4xl">🗓️</p>
+                            <p class="font-semibold mt-2">Dia 3</p>
+                            <p class="text-gray-700">12km de Caminhada</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-4xl">🗓️</p>
+                            <p class="font-semibold mt-2">Dia 4</p>
+                            <p class="text-gray-700">10km de Caminhada</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-4xl">🗓️</p>
+                            <p class="font-semibold mt-2">Dia 5</p>
+                            <p class="text-gray-700">18km de Caminhada</p>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-4xl">🛶</p>
+                            <p class="font-semibold mt-2">Dia 6</p>
+                            <p class="text-700">15km de Caiaque</p>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-3 text-blue-900">Ganhos do Treino de Força 💪</h3>
+                        <p class="text-gray-700 mb-4">Em 3 semanas, o foco é em ganhos rápidos para te dar suporte e resistência.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li><strong>Ativação Neuromuscular:</strong> Mais força e potencia a cada passo.</li>
+                            <li><strong>Resistência Muscular:</strong> Suporte para esforços repetitivos e longos.</li>
+                            <li><strong>Prevenção de Lesões:</strong> Estabilidade para articulações e core.</li>
+                            <li><strong>Melhora da Postura:</strong> Eficiência na caminhada e ao carregar peso.</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-3 text-blue-900">Ganhos do Treino Aeróbico 🏃‍♀️</h3>
+                        <p class="text-gray-700 mb-4">Seu "motor" ficará mais eficiente para aguentar as longas distâncias.</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li><strong>Eficiência Cardiovascular:</strong> Menos cansaço e mais fôlego.</li>
+                            <li><strong>Resistência Aeróbica:</strong> Capacidade de sustentar o esforço por mais tempo.</li>
+                            <li><strong>Uso de Gordura como Energia:</strong> Poupando o glicogênio e adiando a fadiga.</li>
+                            <li><strong>Adaptação ao Volume:</strong> Seu corpo se acostuma com o esforço da viagem.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Plano de Treino -->
+            <section id="training" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2 text-gray-900">Estratégia de Treinamento</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">O plano segue uma progressão inteligente:</strong> construímos uma base na primeira semana, atingimos um pico na segunda e reduzimos o volume na terceira para você chegar na viagem recuperada e adaptada.</p>
+                </div>
+
+                <div class="card p-6 mb-8">
+                    <h3 class="text-xl font-bold text-center mb-4 text-blue-900">Controle de Volume e Carga</h3>
+                    <div class="chart-container">
+                        <canvas id="trainingLoadChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="text-center my-8">
+                    <div class="inline-flex rounded-md shadow-sm" role="group">
+                        <button type="button" class="week-button py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 active" data-week="1">Semana 1</button>
+                        <button type="button" class="week-button py-2 px-4 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100" data-week="2">Semana 2</button>
+                        <button type="button" class="week-button py-2 px-4 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-md hover:bg-gray-100" data-week="3">Semana 3</button>
+                    </div>
+                </div>
+
+                <div id="training-plan"></div>
+                <div id="workout-details-view" class="hidden card p-6 mt-8">
+                    <button id="back-to-week" class="mb-4 text-blue-700 hover:text-blue-900 font-semibold flex items-center">
+                        <span class="text-xl mr-2">←</span> Voltar para a Semana
+                    </button>
+                    <h3 id="workout-details-title" class="text-xl font-bold text-center mb-6 text-blue-900"></h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white rounded-lg workout-details-table">
+                            <thead>
+                                <tr>
+                                    <th class="py-3 px-4">Tipo</th>
+                                    <th class="py-3 px-4">Exercício(s)</th>
+                                    <th class="py-3 px-4">Séries</th>
+                                    <th class="py-3 px-4">Repetições</th>
+                                    <th class="py-3 px-4">Intervalo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="workout-details-body">
+                                <!-- Detalhes do treino serão injetados aqui -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Nutrição & Dicas -->
+            <section id="nutrition" class="content-section">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold mb-2 text-gray-900">Nutrição, Hidratação e Dicas</h2>
+                    <p class="text-gray-600 max-w-2xl mx-auto">O que você come e bebe é tão importante quanto o treino. Aqui estão as regras de ouro para se manter com energia e bem hidratada, além de outras dicas essenciais.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-3 text-blue-900">Hidratação Pré-Viagem 💧</h3>
+                        <p class="text-gray-700 mb-4">Na semana que antecede a viagem, seu objetivo é "encher o tanque" de água.</p>
+                        <div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-4 rounded-r-lg mb-4">
+                            <p class="font-bold">Meta Diária: 3 a 4 litros de líquidos.</p>
+                        </div>
+                        <p class="font-semibold mb-2">O que beber:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li>Água (principal)</li>
+                            <li>Água de coco</li>
+                            <li>Sucos naturais sem açúcar</li>
+                            <li>Frutas ricas em água (melancia, melão)</li>
+                            <li><strong>Evitar:</strong> Álcool, excesso de cafeína.</li>
+                        </ul>
+                    </div>
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-3 text-blue-900">Nutrição Durante a Travessia 🍎</h3>
+                        <p class="text-gray-700 mb-4">Durante o esforço, a reposição deve ser constante.</p>
+                         <p class="font-semibold mb-2">Frequência:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600 mb-4">
+                            <li><strong>Líquidos:</strong> A cada 20-30 min, ingerir 150-250ml.</li>
+                            <li><strong>Carbos Leves:</strong> A cada 45-60 min (ex.: géis).</li>
+                            <li><strong>Comida Sólida:</strong> A cada 1-2 horas.</li>
+                        </ul>
+                        <p class="font-semibold mb-2">O que ingerir:</p>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600">
+                            <li><strong>Líquidos:</strong> Água e isotônicos.</li>
+                            <li><strong>Sais:</strong> Isotônicos, castanhas salgadas, biscoitos.</li>
+                            <li><strong>Energia Rápida:</strong> Géis de carbo, bananas, frutas secas, barras de cereal.</li>
+                        </ul>
+                    </div>
+                     <div class="card p-6 md:col-span-2">
+                        <h3 class="text-xl font-bold mb-3 text-blue-900">Suplementação e Dicas Finais ✨</h3>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <p class="font-semibold mb-2">Sugestão de Suplementos:</p>
+                                <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                    <li><strong>Creatina (5g/dia):</strong> Para performance e recuperação.</li>
+                                    <li><strong>Whey Protein:</strong> Auxilia na recuperação muscular pós-treino.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <p class="font-semibold mb-2">Orientações Essenciais:</p>
+                                <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                    <li><strong>Escute o seu corpo:</strong> Dor é sinal de alerta. É melhor ajustar o treino do que se machucar.</li>
+                                    <li><strong>Priorize a qualidade:
+                                    </strong> Foque na boa execução dos movimentos.</li>
+                                    <li><strong>Descanse:</strong> O descanso é parte do treinamento e crucial para a adaptação.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const trainingData = {
+        1: {
+            title: "Semana 1: Reativação e Base",
+            days: [
+                { day: 'Segunda', type: 'Força', icon: '🏋️‍♀️', details: 'Treino de Força Completo com Circuitos.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada/Corrida)', series: 'N/A', reps: '20 min (5caminhada/10corrida/5caminhada)', interval: 'N/A' },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Prancha Frontal', reps: '30-45s' },
+                                { name: 'Ponte', reps: '30-45s' },
+                                { name: 'Prancha Lateral Isométrica', reps: '20-30s cada lado' }
+                            ],
+                            interval: '30s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Recuo Alternado c/ Halteres', reps: '10-12 reps por perna' },
+                                { name: 'Remada Curvada c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Agachamento Thruster c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Supino c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Fly Invertido c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Panturrilha Corpo Inclinado', reps: '20-25 reps' }
+                            ],
+                            interval: '60-90s'
+                        }
+                    ]
+                },
+                { day: 'Terça', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Caminhada ou Treino Intervalado.',
+                    workoutDetails: [
+                        { type: 'option', name: 'Caminhada/Corrida Leve', series: '1', reps: '45-60 min', interval: 'N/A', optionLabel: 'Opção 1' },
+                        { type: 'option', name: 'Alternar Caminhada com Corrida', series: '6-8', reps: '3min caminhada / 2min corrida', interval: 'N/A', optionLabel: 'Opção 2' }
+                    ]
+                },
+                { day: 'Quarta', type: 'Descanso', icon: '🧘‍♀️', details: 'Descanso Ativo. Alongamento, yoga leve ou caminhada muito leve.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Alongamento / Yoga Leve', series: 'N/A', reps: '30-40 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Quinta', type: 'Força', icon: '🏋️‍♀️', details: 'Treino de Força Completo com Circuitos.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada/Corrida)', series: 'N/A', reps: '20 min (5caminhada/10corrida/5caminhada)', interval: 'N/A' },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Prancha Frontal', reps: '30-45s' },
+                                { name: 'Ponte', reps: '30-45s' },
+                                { name: 'Prancha Lateral Isométrica', reps: '20-30s cada lado' }
+                            ],
+                            interval: '30s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Recuo Alternado c/ Halteres', reps: '10-12 reps por perna' },
+                                { name: 'Remada Curvada c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Agachamento Thruster c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Supino c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Fly Invertido c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Panturrilha Corpo Inclinado', reps: '20-25 reps' }
+                            ],
+                            interval: '60-90s'
+                        }
+                    ]
+                },
+                { day: 'Sexta', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Simulação de Terreno. 60-75 min em terreno irregular ou com inclinação.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Caminhada em Terreno Variado', series: '1', reps: '60-75 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Sábado', type: 'Força', icon: '🏋️‍♀️', details: 'Treino de Força Completo com Circuitos.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada/Corrida)', series: 'N/A', reps: '20 min (5caminhada/10corrida/5caminhada)', interval: 'N/A' },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Prancha Frontal', reps: '30-45s' },
+                                { name: 'Ponte', reps: '30-45s' },
+                                { name: 'Prancha Lateral Isométrica', reps: '20-30s cada lado' }
+                            ],
+                            interval: '30s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Recuo Alternado c/ Halteres', reps: '10-12 reps por perna' },
+                                { name: 'Remada Curvada c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Agachamento Thruster c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Supino c/ Halteres', reps: '10-12 reps' }
+                            ],
+                            interval: '60-90s'
+                        },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Fly Invertido c/ Halteres', reps: '10-12 reps' },
+                                { name: 'Panturrilha Corpo Inclinado', reps: '20-25 reps' }
+                            ],
+                            interval: '60-90s'
+                        }
+                    ]
+                },
+                { day: 'Domingo', type: 'Descanso', icon: '😴', details: 'Descanso Total.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Descanso Total', series: 'N/A', reps: 'N/A', interval: 'N/A' }
+                    ]
+                }
+            ]
+        },
+        2: {
+            title: "Semana 2: Pico de Adaptação",
+            days: [
+                { day: 'Segunda', type: 'Força', icon: '🏋️‍♀️', details: 'Pernas e Core (maior carga).',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada/Corrida)', series: 'N/A', reps: '15 min (5caminhada/5corrida/5caminhada)', interval: 'N/A' },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Elevação Pélvica Unilateral', reps: '10-12 cada perna' },
+                                { name: 'Prancha', reps: '45-60s' }
+                            ],
+                            interval: '30s'
+                        },
+                        { type: 'single', name: 'Agachamento com barra nas costas', series: '4', reps: '8-10 reps', interval: '90s' },
+                        { type: 'single', name: 'Avanço segurando anilha com rotação de tronco p/ lado da perna da frente', series: '3', reps: '10-12 cada perna', interval: '90s' },
+                        { type: 'single', name: 'Stiff com barra', series: '4', reps: '8-10 reps', interval: '90s' },
+                        {
+                            type: 'combinado',
+                            series: '3',
+                            exercises: [
+                                { name: 'Panturrilha degrau unilateral', reps: '20 reps cada perna' },
+                                { name: 'Prancha lateral com abdução da perna de cima', reps: '15 cada lado' }
+                            ],
+                            interval: '90s'
+                        }
+                    ]
+                },
+                { day: 'Terça', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Caminhada ou Treino Intervalado.',
+                    workoutDetails: [
+                        { type: 'option', name: 'Caminhada/Corrida Leve', series: '1', reps: '45-60 min', interval: 'N/A', optionLabel: 'Opção 1' },
+                        { type: 'option', name: 'Alternar Caminhada com Corrida', series: '6-8', reps: '2min caminhada / 4min corrida', interval: 'N/A', optionLabel: 'Opção 2' }
+                    ]
+                },
+                { day: 'Quarta', type: 'Descanso', icon: '🧘‍♀️', details: 'Descanso Ativo. Alongamento e mobilidade articular.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Alongamento / Mobilidade', series: 'N/A', reps: '30-40 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Quinta', type: 'Força', icon: '🏋️‍♀️', details: 'Treino de Força Foco em Costas e Ombros.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada/Corrida)', series: 'N/A', reps: '15 min (5caminhada/5corrida/5caminhada)', interval: 'N/A' },
+                        { type: 'single', name: 'Remada fechada sentada na máquina', series: '3', reps: '12-15 reps', interval: '60s' },
+                        { type: 'single', name: 'Supino sentada na máquina', series: '3', reps: '12-15 reps', interval: '60s' },
+                        { type: 'single', name: 'Pulley', series: '3', reps: '12-15 reps', interval: '60s' },
+                        { type: 'single', name: 'Desenvolvimento/ ombros máquina', series: '3', reps: '12-15 reps', interval: '60s' },
+                        { type: 'single', name: 'Abdominal infra suspenso', series: '3', reps: '15', interval: '45s' },
+                        { type: 'single', name: 'Cadeira adutora', series: '3', reps: '15', interval: '60s' },
+                        { type: 'single', name: 'Cadeira abdutora', series: '3', reps: '15', interval: '60s' }
+                    ]
+                },
+                { day: 'Sexta', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Simulação de Terreno. 60-75 min em terreno irregular ou com inclinação.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Caminhada em Terreno Variado', series: '1', reps: '60-75 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Sábado', type: 'Descanso', icon: '😴', details: 'Descanso Total.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Descanso Total', series: 'N/A', reps: 'N/A', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Domingo', type: 'Descanso', icon: '😴', details: 'Descanso Total.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Descanso Total', series: 'N/A', reps: 'N/A', interval: 'N/A' }
+                    ]
+                }
+            ]
+        },
+        3: {
+            title: "Semana 3: Taper (Redução)",
+            days: [
+                { day: 'Segunda', type: 'Força', icon: '🏋️‍♀️', details: 'Leve (manutenção).',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada)', series: 'N/A', reps: '10 min', interval: 'N/A' },
+                        { type: 'single', name: 'Agachamento (peso corporal)', series: '2', reps: '10', interval: '60s' },
+                        { type: 'single', name: 'Afundo (peso corporal)', series: '2', reps: '8 por perna', interval: '60s' },
+                        { type: 'single', name: 'Prancha', series: '2', reps: '30s', interval: '45s' }
+                    ]
+                },
+                { day: 'Terça', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Leve (ativação). 30-40 min de caminhada leve.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Caminhada Leve', series: '1', reps: '30-40 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Quarta', type: 'Força', icon: '🏋️‍♀️', details: 'Leve (manutenção).',
+                    workoutDetails: [
+                        { type: 'single', name: 'Aquecimento (Caminhada)', series: 'N/A', reps: '10 min', interval: 'N/A' },
+                        { type: 'single', name: 'Elevação Pélvica (Ponte)', series: '2', reps: '12-15', interval: '60s' },
+                        { type: 'single', name: 'Flexão de Braço (com apoio)', series: '2', reps: '8-10', interval: '60s' },
+                        { type: 'single', name: 'Remada com elástico (leve)', series: '2', reps: '10-12', interval: '60s' }
+                    ]
+                },
+                { day: 'Quinta', type: 'Aeróbico', icon: '🏃‍♀️', details: 'Muito Leve (última ativação). 20-30 min de caminhada muito leve.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Caminhada Muito Leve', series: '1', reps: '20-30 min', interval: 'N/A' }
+                    ]
+                },
+                { day: 'Sexta', type: 'Descanso', icon: '✈️', details: 'Descanso Total / Viagem.',
+                    workoutDetails: [
+                        { type: 'single', name: 'Descanso / Viagem', series: 'N/A', reps: 'N/A', interval: 'N/A' }
+                    ]
+                }
+            ]
+        }
+    };
+
+    const trainingPlanContainer = document.getElementById('training-plan');
+    const workoutDetailsView = document.getElementById('workout-details-view');
+    const workoutDetailsTitle = document.getElementById('workout-details-title');
+    const workoutDetailsBody = document.getElementById('workout-details-body');
+    const backToWeekButton = document.getElementById('back-to-week');
+    const weekButtons = document.querySelectorAll('.week-button');
+
+    function renderTrainingPlan(week) {
+        const data = trainingData[week];
+        let html = `<h3 class="text-xl font-bold text-center mb-6 text-blue-900">${data.title}</h3>`;
+        html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">';
+        
+        // Renderiza apenas os dias que existem no array da semana
+        data.days.forEach((dayData, index) => {
+            html += `
+                <button class="card p-4 flex flex-col items-center text-center workout-day-card" data-day-index="${index}" data-week="${week}">
+                    <div class="text-3xl mb-2">${dayData.icon}</div>
+                    <p class="font-bold text-lg">${dayData.day}</p>
+                    <p class="text-sm font-semibold text-blue-700 mb-2">${dayData.type}</p>
+                    <p class="text-xs text-gray-600 flex-grow">${dayData.details}</p>
+                </button>
+            `;
+        });
+
+        // Preenche os dias restantes da semana com blocos vazios para manter o layout de grid
+        const daysInWeek = 7;
+        const remainingDays = daysInWeek - data.days.length;
+        for (let i = 0; i < remainingDays; i++) {
+            html += `<div class="card p-4 flex flex-col items-center text-center opacity-0 pointer-events-none"></div>`;
+        }
+
+
+        html += '</div>';
+        trainingPlanContainer.innerHTML = html;
+
+        document.querySelectorAll('.workout-day-card').forEach(card => {
+            // Only add click listener if it's not week 3
+            if (card.dataset.week !== '3') {
+                card.addEventListener('click', (event) => {
+                    const week = event.currentTarget.dataset.week;
+                    const dayIndex = parseInt(event.currentTarget.dataset.dayIndex);
+                    showWorkoutDetails(trainingData[week].days[dayIndex]);
+                });
+            } else {
+                // Para a semana 3, remove o cursor de ponteiro e o efeito hover
+                card.style.cursor = 'default';
+                card.classList.remove('hover:transform');
+                card.classList.remove('hover:translate-y-[-4px]');
+            }
+        });
+    }
+
+    function showWorkoutDetails(dayData) {
+        workoutDetailsTitle.textContent = `${dayData.day}: ${dayData.type} - ${dayData.details}`;
+        workoutDetailsBody.innerHTML = '';
+
+        if (dayData.workoutDetails && dayData.workoutDetails.length > 0) {
+            dayData.workoutDetails.forEach(item => {
+                const row = document.createElement('tr');
+                let rowClass = '';
+                if (item.type === 'combinado') {
+                    rowClass = 'border-top-combinado';
+                } else if (item.type === 'option' && item.optionLabel === 'Opção 2') {
+                    rowClass = 'border-top-option';
+                }
+
+                if (item.type === 'single') {
+                    row.innerHTML = `
+                        <td class="py-2 px-4">${item.name.includes('Aquecimento') ? 'Aquecimento' : 'Exercício Único'}</td>
+                        <td class="py-2 px-4">${item.name}</td>
+                        <td class="py-2 px-4">${item.series}</td>
+                        <td class="py-2 px-4">${item.reps}</td>
+                        <td class="py-2 px-4">${item.interval}</td>
+                    `;
+                } else if (item.type === 'combinado') {
+                    row.innerHTML = `
+                        <td class="py-2 px-4">Combinado</td>
+                        <td class="py-2 px-4">${item.exercises.map(e => e.name).join('<br>')}</td>
+                        <td class="py-2 px-4">${item.series}</td>
+                        <td class="py-2 px-4">${item.exercises.map(e => e.reps).join('<br>')}</td>
+                        <td class="py-2 px-4">${item.interval}</td>
+                    `;
+                } else if (item.type === 'option') {
+                    row.innerHTML = `
+                        <td class="py-2 px-4 font-semibold">${item.optionLabel}</td>
+                        <td class="py-2 px-4">${item.name}</td>
+                        <td class="py-2 px-4">${item.series}</td>
+                        <td class="py-2 px-4">${item.reps}</td>
+                        <td class="py-2 px-4">${item.interval}</td>
+                    `;
+                }
+                row.className = rowClass; // Apply the class
+                workoutDetailsBody.appendChild(row);
+            });
+        } else {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="5" class="py-4 px-4 text-center text-gray-500">Nenhum detalhe específico de exercício para este dia.</td>`;
+            workoutDetailsBody.appendChild(row);
+        }
+
+        trainingPlanContainer.classList.add('hidden');
+        workoutDetailsView.classList.remove('hidden');
+    }
+
+    function hideWorkoutDetails() {
+        workoutDetailsView.classList.add('hidden');
+        trainingPlanContainer.classList.remove('hidden');
+    }
+
+    backToWeekButton.addEventListener('click', hideWorkoutDetails);
+
+    weekButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            weekButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            hideWorkoutDetails(); // Esconde os detalhes do dia ao trocar de semana
+            renderTrainingPlan(button.dataset.week);
+        });
+    });
+
+    renderTrainingPlan(1);
+
+    const navButtons = document.querySelectorAll('.nav-button');
+    const contentSections = document.querySelectorAll('.content-section');
+
+    navButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            document.getElementById(button.dataset.tab).classList.add('active');
+            // Reset training view if navigating away from it
+            if (button.dataset.tab !== 'training') {
+                hideWorkoutDetails();
+            }
+        });
+    });
+
+    const ctx = document.getElementById('trainingLoadChart').getContext('2d');
+    const trainingLoadChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Semana 1: Construção', 'Semana 2: Pico', 'Semana 3: Redução'],
+            datasets: [{
+                label: 'Volume de Treino Percebido',
+                data: [65, 100, 30],
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.6)',
+                    'rgba(30, 58, 138, 0.7)',
+                    'rgba(147, 197, 253, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(59, 130, 246, 1)',
+                    'rgba(30, 58, 138, 1)',
+                    'rgba(147, 197, 253, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                       display: false
+                    },
+                    grid: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Intensidade e Volume'
+                    }
+                },
+                x: {
+                   grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    enabled: false
+                }
+            }
+        }
+    });
+
+    // Countdown Timer Logic
+    const countdownElement = document.getElementById('countdown');
+    const targetDate = new Date('2025-07-18T07:00:00').getTime(); // 18 de Julho de 2025, 7 AM
+
+    const updateCountdown = setInterval(function() {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        if (distance < 0) {
+            clearInterval(updateCountdown);
+            countdownElement.innerHTML = "A viagem começou!";
+        } else {
+            countdownElement.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+    }, 1000);
+});
+</script>
+
+</body>
+</html>
